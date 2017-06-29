@@ -29,6 +29,16 @@ type formatter struct {
 	buffer bytes.Buffer
 }
 
+var nextItem gauge.Item
+
+func (formatter *formatter) SetNext(item gauge.Item) {
+	nextItem = item
+}
+
+func (formatter *formatter) GetNext() (item gauge.Item) {
+	return nextItem
+}
+
 func (formatter *formatter) Specification(specification *gauge.Specification) {
 }
 
@@ -41,7 +51,13 @@ func (formatter *formatter) Heading(heading *gauge.Heading) {
 }
 
 func (formatter *formatter) Tags(tags *gauge.Tags) {
+	if !strings.HasSuffix(formatter.buffer.String(), "\n\n") {
+		formatter.buffer.WriteString("\n")
+	}
 	formatter.buffer.WriteString(FormatTags(tags))
+	if formatter.GetNext().Kind() != gauge.CommentKind || strings.TrimSpace(nextItem.(*gauge.Comment).Value) != "" {
+		formatter.buffer.WriteString("\n")
+	}
 }
 
 func (formatter *formatter) Table(table *gauge.Table) {
